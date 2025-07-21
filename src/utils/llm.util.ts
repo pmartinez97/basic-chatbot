@@ -1,5 +1,4 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage } from "@langchain/core/messages";
 import { State } from "../entity/state.entity";
 import { webSearchTool } from "../tools/search.tool";
 
