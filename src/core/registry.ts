@@ -1,6 +1,7 @@
 import { AgentBase } from './base/agent.base';
 import { AgentMetadata } from '../types';
 import { ChatAgent } from '../agents/chat';
+import { DatabaseAgentWrapper } from '../agents/database/wrapper';
 import { logger } from '../utils/logger.util';
 
 export class AgentRegistry {
@@ -20,6 +21,7 @@ export class AgentRegistry {
 
   private registerDefaultAgents(): void {
     this.registerAgent(new ChatAgent());
+    this.registerAgent(new DatabaseAgentWrapper());
   }
 
   public registerAgent(agent: AgentBase): void {

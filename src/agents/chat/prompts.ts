@@ -1,4 +1,5 @@
 import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { BaseMessage } from "@langchain/core/messages";
 
 export class ChatAgentPrompts {
   private static systemTemplate = `You are a helpful, harmless, and honest AI assistant. Your role is to engage in natural conversations and assist users with a wide variety of tasks including:
@@ -15,16 +16,22 @@ Guidelines:
 - Use the web search tool when you need current information
 - Consider any extra context provided by the user
 
+Extra Context:
+Below you will find additional context or useful information that can help you understand the user's request better and provide more relevant responses.
 {extra_context}
 
 Conversation History:
-{conversation_history}`;
+Below are the previous messages in this conversation. Use this history to maintain context and provide coherent responses.
+`;
 
-  public static createChatPrompt(extraContext?: string): ChatPromptTemplate {
+  public static async createChatPrompt(extraContext: string, conversationHistory: BaseMessage[]): Promise<string> {
     return ChatPromptTemplate.fromMessages([
       ["system", this.systemTemplate],
       ["placeholder", "{messages}"],
-    ]);
+    ]).format({
+      extra_context: extraContext,
+      messages: conversationHistory,
+    });
   }
 
   public static formatSystemMessage(extraContext?: string, conversationHistory: string = ""): string {

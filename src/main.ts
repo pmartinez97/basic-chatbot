@@ -1,9 +1,13 @@
 import { ApiServer } from './api/server';
 import { logger } from './utils/logger.util';
+import { initializeLangSmith } from './utils/langsmith.util';
 
 async function main() {
   try {
     logger.info('🚀 Starting Chatbot API Server...');
+    
+    // Initialize LangSmith tracing
+    initializeLangSmith();
     
     const server = new ApiServer();
     await server.start();

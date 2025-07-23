@@ -11,6 +11,15 @@ const ConfigSchema = z.object({
   anthropicApiKey: z.string().optional(),
   tavilyApiKey: z.string().optional(),
   logLevel: z.enum(['error', 'warn', 'info', 'debug']).default('info'),
+  
+  // LangSmith configuration
+  langsmithApiKey: z.string().optional(),
+  langsmithProject: z.string().default('bot-chat-llm'),
+  langsmithTracing: z.boolean().default(false),
+  
+  // Database configuration
+  databaseUrl: z.string().default('sqlite:./data/app.db'),
+  databaseType: z.string().default('sqlite'),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -22,6 +31,15 @@ export const config: Config = ConfigSchema.parse({
   anthropicApiKey: process.env.ANTHROPIC_API_KEY,
   tavilyApiKey: process.env.TAVILY_API_KEY,
   logLevel: process.env.LOG_LEVEL || 'info',
+  
+  // LangSmith configuration
+  langsmithApiKey: process.env.LANGSMITH_API_KEY,
+  langsmithProject: process.env.LANGSMITH_PROJECT || 'bot-chat-llm',
+  langsmithTracing: process.env.LANGSMITH_TRACING === 'true',
+  
+  // Database configuration
+  databaseUrl: process.env.DATABASE_URL || 'sqlite:./data/app.db',
+  databaseType: process.env.DATABASE_TYPE || 'sqlite',
 });
 
 export function getLLMConfig(modelString: string): LLMConfig {

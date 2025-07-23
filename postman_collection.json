@@ -218,6 +218,166 @@
         }
       ],
       "description": "Agent-related endpoints"
+    },
+    {
+      "name": "Database API",
+      "item": [
+        {
+          "name": "Get Database Schema",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/database/schema",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "database", "schema"]
+            },
+            "description": "Get the database schema information including tables, columns, and data types"
+          },
+          "response": []
+        },
+        {
+          "name": "Test Database Connection",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/database/test",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "database", "test"]
+            },
+            "description": "Test the database connection"
+          },
+          "response": []
+        },
+        {
+          "name": "Database Query - Simple Count",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"How many users are in the database?\",\n  \"max_results\": 50\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/database/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "database", "query"]
+            },
+            "description": "Execute a simple count query using natural language"
+          },
+          "response": []
+        },
+        {
+          "name": "Database Query - Complex Analysis",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"Show me the users with their orders and total spending, ordered by total amount spent\",\n  \"table_context\": \"Focus on users, orders and spending analysis\",\n  \"max_results\": 10,\n  \"config\": {\n    \"temperature\": 0.1,\n    \"allow_write_operations\": false\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/database/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "database", "query"]
+            },
+            "description": "Execute a complex analytical query with JOINs and aggregations"
+          },
+          "response": []
+        },
+        {
+          "name": "Database Query - Security Test (Should Fail)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"Delete all users from the database\",\n  \"max_results\": 50\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/database/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "database", "query"]
+            },
+            "description": "Test security - this should fail as write operations are disabled"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Database Agent Graph",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/database/graph",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "database", "graph"]
+            },
+            "description": "Get the database agent workflow graph metadata"
+          },
+          "response": []
+        },
+        {
+          "name": "Chat with Database Agent Integration",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input_text\": \"Can you tell me about our user base? How many users do we have and what are their departments?\",\n  \"extra_context\": \"Please use the database to get current information about our users.\",\n  \"config\": {\n    \"model\": \"openai/gpt-4o-mini\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/agents/chat_agent/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "agents", "chat_agent", "chat"]
+            },
+            "description": "Test database integration through chat agent using database tools"
+          },
+          "response": []
+        }
+      ],
+      "description": "Database-related endpoints and functionality testing"
     }
   ],
   "event": [

@@ -53,9 +53,7 @@ export class ChatAgent extends AgentBase<ChatAgentInput, ChatAgentOutput, ChatAg
         messages: [],
         iterationCount: 0,
         isComplete: false,
-        nodeHistory: [],
-        startTime: Date.now(),
-        currentNode: undefined,
+        extra_context: validatedInput.extra_context,
       };
 
       logger.info('Starting LangGraph workflow execution');
@@ -64,9 +62,8 @@ export class ChatAgent extends AgentBase<ChatAgentInput, ChatAgentOutput, ChatAg
       const finalState = await graph.invoke(initialState);
 
       logger.info('LangGraph workflow execution completed', {
-        nodeHistory: finalState.nodeHistory,
         iterations: finalState.iterationCount,
-        executionTime: Date.now() - (finalState.startTime || Date.now()),
+        messageCount: finalState.messages.length,
       });
 
       // Extract output from final state
@@ -76,8 +73,6 @@ export class ChatAgent extends AgentBase<ChatAgentInput, ChatAgentOutput, ChatAg
         metadata: {
           iterations: finalState.iterationCount,
           messageCount: finalState.messages.length,
-          nodeHistory: finalState.nodeHistory,
-          executionTime: Date.now() - (finalState.startTime || Date.now()),
         }
       };
 

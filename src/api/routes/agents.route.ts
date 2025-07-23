@@ -5,6 +5,7 @@ import { validateBody, validateParams } from '../middleware/validation.middlewar
 import { ApiResponse, ChatRequest, ChatResponse } from '../../types';
 import { logger } from '../../utils/logger.util';
 import { getGraphMetadata } from '../../agents/chat/graph';
+import { createDatabaseAgent } from '../../agents/database';
 
 const router = Router();
 
@@ -81,9 +82,22 @@ router.get('/:id/graph', validateParams(AgentParamsSchema), async (req: Request,
       });
     }
 
-    // For now, only chat_agent supports graph visualization
+    // Support graph visualization for chat_agent and database_agent
     if (id === 'chat_agent') {
       const graphData = getGraphMetadata();
+      
+      res.json({
+        success: true,
+        data: {
+          agentId: id,
+          graph: graphData,
+          generatedAt: new Date().toISOString(),
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } else if (id === 'database_agent') {
+      const databaseAgent = createDatabaseAgent();
+      const graphData = databaseAgent.getGraphMetadata();
       
       res.json({
         success: true,

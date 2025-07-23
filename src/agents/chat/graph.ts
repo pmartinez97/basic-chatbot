@@ -1,75 +1,31 @@
-import { ChatAgentState, ChatAgentConfig, ChatAgentStateInterface } from "./state";
-import { inputNode, callModelNode, finalizeNode, shouldContinue } from "./nodes";
-import { logger } from "../../utils/logger.util";
+import { END, StateGraph, START } from "@langchain/langgraph";
+import { ToolNode, toolsCondition } from "@langchain/langgraph/prebuilt";
+import { ChatAgentStateAnnotation, ChatAgentConfig } from "./state";
+import { inputNode, callModelNode } from "./nodes";
+import { webSearchTool } from "../../tools/search.tool";
+import { databaseTools } from "../../tools/database.tool";
 
-// Custom Graph Executor - simulates LangGraph but actually works
-export class ChatAgentGraphExecutor {
-  private config?: ChatAgentConfig;
+// Create the tool node with all available tools
+const toolNode = new ToolNode([webSearchTool, ...databaseTools]);
 
-  constructor(config?: ChatAgentConfig) {
-    this.config = config;
-  }
+// Create the proper LangGraph StateGraph
+export function createChatAgentGraph(_config?: ChatAgentConfig) {
+  const builder = new StateGraph(ChatAgentStateAnnotation)
+    .addNode("message", inputNode)
+    .addNode("call_model", callModelNode)
+    .addNode("tools", toolNode)
+    .addEdge(START, "message")
+    .addEdge("message", "call_model")
+    .addConditionalEdges("call_model", toolsCondition, {
+      tools: "tools",
+      __end__: END,
+    })
+    .addEdge("tools", "call_model");
 
-  async invoke(initialState: ChatAgentStateInterface): Promise<ChatAgentStateInterface> {
-    logger.info("Graph Executor: Starting workflow execution");
-    
-    // Create a state object that we can track through the workflow
-    const state = new ChatAgentState(initialState.input);
-    Object.assign(state, initialState);
+  // Compile the graph
+  const compiledGraph = builder.compile();
 
-    try {
-      // Step 1: Input node
-      logger.info("Graph Executor: Executing input node");
-      state.enterNode("input");
-      const inputResult = await inputNode(state);
-      state.messages = inputResult.messages || state.messages;
-      state.iterationCount = inputResult.iterationCount || state.iterationCount;
-      state.exitNode();
-
-      // Step 2: Call model node (with potential loops)
-      let shouldContinueLoop = true;
-      while (shouldContinueLoop) {
-        logger.info("Graph Executor: Executing call_model node");
-        state.enterNode("call_model");
-        const modelResult = await callModelNode(state, this.config);
-        state.messages = modelResult.messages || state.messages;
-        state.iterationCount = modelResult.iterationCount || state.iterationCount;
-        state.exitNode();
-
-        // Check if we should continue or finalize
-        const decision = shouldContinue(state);
-        logger.info(`Graph Executor: Decision from call_model: ${decision}`, {
-          iterationCount: state.iterationCount,
-          isComplete: state.isComplete
-        });
-
-        shouldContinueLoop = decision === "continue";
-      }
-
-      // Step 3: Finalize node
-      logger.info("Graph Executor: Executing finalize node");
-      state.enterNode("finalize");
-      const finalResult = await finalizeNode(state);
-      state.isComplete = finalResult.isComplete || state.isComplete;
-      state.exitNode();
-
-      logger.info("Graph Executor: Workflow execution completed", {
-        nodeHistory: state.nodeHistory,
-        iterations: state.iterationCount,
-        executionTime: state.getExecutionTime(),
-      });
-
-      return state;
-    } catch (error) {
-      logger.error("Graph Executor: Error during workflow execution:", error);
-      throw error;
-    }
-  }
-}
-
-// Factory function to create the graph executor (replaces LangGraph)
-export function createChatAgentGraph(config?: ChatAgentConfig) {
-  return new ChatAgentGraphExecutor(config);
+  return compiledGraph;
 }
 
 // Export graph metadata for visualization
@@ -86,13 +42,13 @@ export const getGraphMetadata = () => {
         id: "call_model", 
         type: "node",
         label: "LLM Call",
-        description: "Call LLM with optional web search tools"
+        description: "Call LLM with tools available"
       },
       {
-        id: "finalize",
+        id: "tools",
         type: "node", 
-        label: "Finalize",
-        description: "Mark execution as complete"
+        label: "Tools",
+        description: "Execute tool calls made by the LLM"
       },
       {
         id: "__end__",
@@ -110,33 +66,33 @@ export const getGraphMetadata = () => {
       },
       {
         from: "call_model",
-        to: "finalize", 
+        to: "tools", 
         type: "conditional",
-        label: "Complete",
-        condition: "end"
+        label: "Tool calls",
+        condition: "tools"
       },
       {
         from: "call_model",
-        to: "call_model",
+        to: "__end__",
         type: "conditional", 
-        label: "Continue",
-        condition: "continue"
+        label: "Complete",
+        condition: "__end__"
       },
       {
-        from: "finalize",
-        to: "__end__",
+        from: "tools",
+        to: "call_model",
         type: "direct",
-        label: "Finish"
+        label: "Continue"
       }
     ],
     entryPoint: "input",
     conditionalLogic: {
       "call_model": {
-        function: "shouldContinue",
-        description: "Determines if more iterations are needed or if execution is complete",
+        function: "toolsCondition",
+        description: "Determines if tools need to be called or if execution is complete",
         conditions: {
-          "continue": "iterationCount < 3 && !isComplete",
-          "end": "iterationCount >= 3 || isComplete"
+          "tools": "response has tool_calls",
+          "__end__": "response has no tool_calls"
         }
       }
     }
