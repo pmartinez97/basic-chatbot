@@ -1,111 +1,284 @@
-# Bot Chat LLM
+# Bot Chat LLM API
 
-A Node.js application that creates an intelligent chatbot using LangGraph, OpenAI, and Tavily search capabilities. The bot can answer questions and perform web searches when needed.
+A modern TypeScript-based chatbot API server built with Express.js and LangChain, providing intelligent conversational AI capabilities with automatic web search integration.
 
-## Features
+## ✨ Features
 
-- **AI-Powered Conversations**: Uses OpenAI's ChatGPT model for natural language processing
-- **Web Search Integration**: Automatically searches the web using Tavily API when additional information is needed
-- **Graph-Based Architecture**: Built with LangGraph for robust conversation flow management
-- **Visual Graph Generation**: Generates a visual representation of the conversation flow as a PNG diagram
-
-## Prerequisites
-
-- Node.js (v14 or higher)
-- npm or yarn
-- OpenAI API Key
-- Tavily API Key
+- **🚀 Express.js API Server** with RESTful endpoints
+- **🤖 Multiple LLM Providers**: OpenAI and Anthropic support
+- **🧠 Intelligent Agent Architecture** with extensible agent registry
+- **🔍 Smart Web Search Integration** - Automatically searches when current information is needed
+- **📊 Input/Output Validation** using Zod schemas
+- **📝 Comprehensive Logging** with Winston
+- **🛡️ Error Handling** and security middleware
+- **🔒 Type Safety** throughout the codebase
+- **📮 Postman Collection** included for easy testing
 
 ## Installation
 
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd bot-chat-llm
-```
-
-2. Install dependencies:
+1. Install dependencies:
 ```bash
 npm install
 ```
 
-3. Create a `.env` file in the root directory with your API keys:
+2. Copy environment template and configure:
+```bash
+cp .env.template .env
+# Edit .env with your API keys
+```
+
+3. Configure your API keys in `.env`:
 ```env
 OPENAI_API_KEY=your_openai_api_key_here
+ANTHROPIC_API_KEY=your_anthropic_api_key_here  
 TAVILY_API_KEY=your_tavily_api_key_here
+PORT=3000
+NODE_ENV=development
+LOG_LEVEL=info
 ```
 
 ## Usage
 
-Run the application:
+### Development Mode
 ```bash
-npx ts-node src/index.ts
+npm run dev
 ```
 
-The application will:
-1. Generate a visual graph diagram (`graph.png`) showing the conversation flow
-2. Execute a sample conversation asking "¿Cuál es la capital de Francia?" (What is the capital of France?)
-3. Display the conversation in the console
+### Production Build
+```bash
+npm run build
+npm start
+```
 
-## Project Structure
+### Legacy Script (Original Implementation)
+```bash
+npm run legacy
+```
+
+## 📡 API Endpoints
+
+### List All Agents
+```http
+GET /api/agents
+```
+Returns all available agents with their capabilities and metadata.
+
+### Get Agent Metadata
+```http
+GET /api/agents/:id
+```
+Get detailed information about a specific agent.
+
+### Chat with Agent
+```http
+POST /api/agents/:id/chat
+Content-Type: application/json
+
+{
+  "input_text": "What is the current weather in Paris?",
+  "extra_context": "Optional additional context",
+  "config": {
+    "model": "openai/gpt-4o-mini"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "output_text": "The current weather in Paris is 15°C with light rain...",
+    "metadata": {
+      "iterations": 1,
+      "messageCount": 5
+    }
+  },
+  "timestamp": "2025-07-23T17:00:00.000Z"
+}
+```
+
+### Health Check
+```http
+GET /health
+```
+Returns server health status and version information.
+
+## 🤖 Available Agents
+
+### Chat Agent (`chat_agent`)
+An intelligent conversational AI agent with the following capabilities:
+- **Natural Conversation**: Engaging dialogue on various topics
+- **Question Answering**: Comprehensive responses to user queries
+- **Analysis & Writing**: Content analysis and generation
+- **Problem Solving**: Logical reasoning and solution finding
+- **🔍 Smart Web Search**: Automatically searches for current information when needed
+
+**Key Features:**
+- **Intelligent Tool Selection**: The LLM automatically decides when to use web search
+- **Real-time Information**: Access to current weather, news, stock prices, and more
+- **Contextual Awareness**: Understands when current vs. historical information is needed
+- **Error Resilience**: Graceful fallback when search is unavailable
+
+**Example Queries that Trigger Web Search:**
+- "What's the current weather in Tokyo?"
+- "What is Apple's stock price today?"
+- "What are the latest news about AI?"
+- "Current exchange rate EUR to USD"
+
+**Example Queries that DON'T Trigger Web Search:**
+- "What is 2+2?"
+- "Explain how Python works"
+- "Write a poem about cats"
+- "What is the capital of France?"
+
+## 📮 Postman Collection
+
+A complete Postman collection is included for easy API testing:
+
+1. **Import Collection**: Import `postman_collection.json` into Postman
+2. **Import Environment**: Import `postman_environment.json` for environment variables
+3. **Set Agent ID**: Update the `agentId` variable to `chat_agent`
+
+**Available Test Requests:**
+- **Basic Chat**: Simple conversation without web search
+- **Weather Search**: Test web search with weather queries
+- **News Search**: Test web search with current events
+- **Stock Search**: Test web search with financial data
+
+## 🧪 Usage Examples
+
+### Basic Conversation
+```bash
+curl -X POST http://localhost:3000/api/agents/chat_agent/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "input_text": "Hello! How can you help me?",
+    "extra_context": "General conversation"
+  }'
+```
+
+### Current Information Query (Triggers Web Search)
+```bash
+curl -X POST http://localhost:3000/api/agents/chat_agent/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "input_text": "What is the current price of Bitcoin?",
+    "extra_context": ""
+  }'
+```
+
+### Knowledge Query (No Web Search)
+```bash
+curl -X POST http://localhost:3000/api/agents/chat_agent/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "input_text": "Explain the concept of recursion in programming",
+    "extra_context": ""
+  }'
+```
+
+## 📁 Project Structure
 
 ```
 src/
-├── entity/
-│   └── state.entity.ts    # State management for the conversation graph
-├── tools/
-│   └── search.tool.ts     # Tavily web search tool configuration
-├── utils/
-│   └── llm.util.ts        # OpenAI model configuration and conversation logic
-└── index.ts               # Main application entry point
+├── agents/           # Agent implementations
+│   └── chat/        # Chat agent with nodes, prompts, and state
+├── api/             # Express.js API layer
+│   ├── routes/      # Route handlers
+│   ├── middleware/  # Express middleware (validation, errors)
+│   └── server.ts    # Express server configuration
+├── core/            # Core framework components
+│   ├── base/        # Base classes for agents
+│   └── registry.ts  # Agent registry and management
+├── tools/           # LLM tools and integrations
+│   └── search.tool.ts # Web search tool (Tavily)
+├── types/           # TypeScript type definitions
+└── utils/           # Utility functions (LLM, config, logging)
 ```
-
-## How It Works
-
-1. **State Management**: The application uses LangGraph's state annotation to track conversation messages and iteration count
-2. **LLM Integration**: OpenAI's ChatGPT model processes user messages and generates responses
-3. **Tool Integration**: When the AI needs additional information, it can use the Tavily search tool to find relevant web results
-4. **Flow Control**: The graph automatically decides whether to use tools or end the conversation based on the AI's response
 
 ## Configuration
 
-### Temperature Setting
-The AI model is configured with a temperature of 0.7 for balanced creativity and consistency. You can modify this in `src/utils/llm.util.ts`.
+The application supports configuration via environment variables:
 
-### Iteration Limit
-The conversation is limited to 3 iterations to prevent infinite loops. This can be adjusted in the `should_continue` function in `src/utils/llm.util.ts`.
+- `PORT`: Server port (default: 3000)
+- `NODE_ENV`: Environment (development/production)
+- `LOG_LEVEL`: Logging level (error/warn/info/debug)
+- `CORS_ORIGIN`: CORS origin configuration
+- API keys for various services
 
-## API Keys Setup
+## Error Handling
 
-### OpenAI API Key
-1. Go to [OpenAI Platform](https://platform.openai.com/)
-2. Create an account and navigate to API keys
-3. Generate a new API key
-4. Add it to your `.env` file
+- Input validation with detailed error messages
+- Structured error responses
+- Comprehensive logging
+- Graceful error recovery
 
-### Tavily API Key
-1. Go to [Tavily](https://tavily.com/)
-2. Sign up for an account
-3. Generate an API key
-4. Add it to your `.env` file
+## 🔍 Web Search Integration
 
-## Development
+### How It Works
+The web search integration uses **intelligent tool selection** where the LLM automatically decides when to search for current information:
 
-To modify the conversation or add new features:
+1. **User sends query** → Agent processes with LLM
+2. **LLM determines** if current information is needed
+3. **If yes** → Automatically calls Tavily search tool
+4. **Search results** → Fed back to LLM for comprehensive response
+5. **Final answer** → Includes current, real-time information
 
-1. **Add new tools**: Create new tool files in `src/tools/` and import them in `index.ts`
-2. **Modify conversation logic**: Update the LLM function in `src/utils/llm.util.ts`
-3. **Change conversation flow**: Modify the graph structure in `src/index.ts`
+### Technical Implementation
+```typescript
+// LLM with bound tools - automatic tool selection
+const llmWithTools = createLLM(llmConfig, [webSearchTool]);
+const response = await llmWithTools.invoke(state.messages);
 
-## Dependencies
+// Handle tool calls automatically
+if (response.tool_calls && response.tool_calls.length > 0) {
+  // Execute tools and get results
+  // Feed results back to LLM for final response
+}
+```
 
-- **@langchain/community**: Community tools and integrations for LangChain
-- **@langchain/core**: Core LangChain functionality
-- **@langchain/langgraph**: Graph-based conversation flow management
-- **openai**: Official OpenAI API client
-- **tavily**: Web search API for enhanced information retrieval
-- **dotenv**: Environment variable management
+### Search Tool Configuration
+The web search tool is implemented using:
+- **Provider**: Tavily API (optimized for LLM responses)
+- **Max Results**: 5 search results per query
+- **Schema**: Proper Zod validation for OpenAI function calling
+- **Error Handling**: Graceful fallback when search fails
 
-## License
+## 🛠️ Adding New Agents
+
+1. Create agent directory in `src/agents/your_agent/`
+2. Implement agent class extending `AgentBase`
+3. Define state, configuration, and validation schemas using Zod
+4. Create nodes for agent workflow (input, processing, output)
+5. Register agent in `AgentRegistry`
+
+**Example Agent Structure:**
+```
+src/agents/your_agent/
+├── index.ts      # Main agent class
+├── nodes.ts      # Workflow nodes
+├── prompts.ts    # Prompt templates
+└── state.ts      # State and schema definitions
+```
+
+## 📊 Monitoring & Logs
+
+- **Winston Logging**: Comprehensive logging with different levels
+- **Request Tracking**: All API requests are logged with metadata
+- **Error Tracking**: Detailed error logging with stack traces
+- **Tool Usage**: Web search calls are logged for monitoring
+
+## 🚨 Troubleshooting
+
+### Common Issues
+- **"Invalid schema" errors**: Ensure API keys are properly configured
+- **Empty responses**: Check if LLM provider API key is valid
+- **Search not working**: Verify TAVILY_API_KEY is set correctly
+
+### Debug Mode
+Set `LOG_LEVEL=debug` in your `.env` file for detailed logging.
+
+## 📝 License
 
 ISC

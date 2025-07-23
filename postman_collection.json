@@ -1,0 +1,243 @@
+{
+  "info": {
+    "name": "Bot Chat LLM API",
+    "description": "Postman collection for the Bot Chat LLM API server with agent-based chat functionality",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "noauth"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        },
+        "description": "Check API server health status"
+      },
+      "response": []
+    },
+    {
+      "name": "API Root",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/",
+          "host": ["{{baseUrl}}"],
+          "path": [""]
+        },
+        "description": "Get API server information and available endpoints"
+      },
+      "response": []
+    },
+    {
+      "name": "Agents",
+      "item": [
+        {
+          "name": "List All Agents",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/agents",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "agents"]
+            },
+            "description": "Get list of all available agents"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Agent Metadata",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/agents/{{agentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "agents", "{{agentId}}"]
+            },
+            "description": "Get metadata for a specific agent by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Agent Workflow Graph",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/agents/{{agentId}}/graph",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "agents", "{{agentId}}", "graph"]
+            },
+            "description": "Get the workflow graph structure for visualization"
+          },
+          "response": []
+        },
+        {
+          "name": "Chat with Agent - Basic",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input_text\": \"Hello! Can you help me with a question?\",\n  \"extra_context\": \"This is additional context for the agent\",\n  \"config\": {\n    \"temperature\": 0.7,\n    \"max_tokens\": 1000\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/agents/{{agentId}}/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "agents", "{{agentId}}", "chat"]
+            },
+            "description": "Execute basic chat with a specific agent"
+          },
+          "response": []
+        },
+        {
+          "name": "Chat with Agent - Web Search (Weather)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input_text\": \"What is the current weather in New York City today?\",\n  \"extra_context\": \"Please use web search to get the most current weather information.\",\n  \"config\": {\n    \"model\": \"openai/gpt-4o-mini\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/agents/{{agentId}}/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "agents", "{{agentId}}", "chat"]
+            },
+            "description": "Test web search integration with weather query"
+          },
+          "response": []
+        },
+        {
+          "name": "Chat with Agent - Web Search (News)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input_text\": \"What are the latest developments in artificial intelligence this week?\",\n  \"extra_context\": \"Please search for recent AI news and developments. Use web search to get current information.\",\n  \"config\": {\n    \"model\": \"openai/gpt-4o-mini\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/agents/{{agentId}}/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "agents", "{{agentId}}", "chat"]
+            },
+            "description": "Test web search integration with news/current events query"
+          },
+          "response": []
+        },
+        {
+          "name": "Chat with Agent - Web Search (Stock Prices)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input_text\": \"What is the current stock price of Apple (AAPL) and how has it performed this week?\",\n  \"extra_context\": \"Please use web search to get real-time stock information and recent performance data.\",\n  \"config\": {\n    \"model\": \"openai/gpt-4o-mini\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/agents/{{agentId}}/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "agents", "{{agentId}}", "chat"]
+            },
+            "description": "Test web search integration with financial data query"
+          },
+          "response": []
+        }
+      ],
+      "description": "Agent-related endpoints"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ]
+}
