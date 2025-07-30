@@ -23,8 +23,10 @@ export function initializeLangSmith(): Client | null {
 
       // Set environment variables for LangChain tracing
       process.env.LANGCHAIN_TRACING = config.langsmithTracing ? 'true' : 'false';
-      process.env.LANGCHAIN_PROJECT = config.langsmithProject;
-      process.env.LANGCHAIN_API_KEY = config.langsmithApiKey;
+      process.env.LANGCHAIN_TRACING_V2 = config.langchainTracingV2 ? 'true' : 'false';
+      process.env.LANGCHAIN_PROJECT = config.langchainProject;
+      process.env.LANGCHAIN_API_KEY = config.langchainApiKey || config.langsmithApiKey;
+      process.env.LANGCHAIN_ENDPOINT = config.langchainEndpoint;
 
       logger.info('LangSmith tracing initialized', {
         project: config.langsmithProject,

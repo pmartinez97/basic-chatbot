@@ -6,6 +6,7 @@ import { logger } from '../utils/logger.util';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 import agentsRouter from './routes/agents.route';
 import databaseRouter from './routes/database.route';
+import interruptsRouter from './routes/interrupts.route';
 
 export class ApiServer {
   private app: express.Application;
@@ -53,6 +54,7 @@ export class ApiServer {
     // API routes
     this.app.use('/api/agents', agentsRouter);
     this.app.use('/api/database', databaseRouter);
+    this.app.use('/api/interrupts', interruptsRouter);
 
     // Root endpoint
     this.app.get('/', (_req, res) => {
@@ -63,6 +65,7 @@ export class ApiServer {
           health: '/health',
           agents: '/api/agents',
           database: '/api/database',
+          interrupts: '/api/interrupts',
         },
         timestamp: new Date().toISOString(),
       });
@@ -101,6 +104,7 @@ export class ApiServer {
           health: `http://localhost:${config.port}/health`,
           agents: `http://localhost:${config.port}/api/agents`,
           database: `http://localhost:${config.port}/api/database`,
+          interrupts: `http://localhost:${config.port}/api/interrupts`,
           root: `http://localhost:${config.port}/`,
         });
       });

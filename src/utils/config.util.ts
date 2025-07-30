@@ -17,6 +17,13 @@ const ConfigSchema = z.object({
   langsmithProject: z.string().default('bot-chat-llm'),
   langsmithTracing: z.boolean().default(false),
   
+  // LangGraph Studio configuration
+  langchainApiKey: z.string().optional(),
+  langchainProject: z.string().default('bot-chat-llm'),
+  langchainTracingV2: z.boolean().default(false),
+  langchainEndpoint: z.string().default('https://api.smith.langchain.com'),
+  langgraphApiPort: z.number().default(3001),
+  
   // Database configuration
   databaseUrl: z.string().default('sqlite:./data/app.db'),
   databaseType: z.string().default('sqlite'),
@@ -36,6 +43,13 @@ export const config: Config = ConfigSchema.parse({
   langsmithApiKey: process.env.LANGSMITH_API_KEY,
   langsmithProject: process.env.LANGSMITH_PROJECT || 'bot-chat-llm',
   langsmithTracing: process.env.LANGSMITH_TRACING === 'true',
+  
+  // LangGraph Studio configuration
+  langchainApiKey: process.env.LANGCHAIN_API_KEY || process.env.LANGSMITH_API_KEY,
+  langchainProject: process.env.LANGCHAIN_PROJECT || process.env.LANGSMITH_PROJECT || 'bot-chat-llm',
+  langchainTracingV2: process.env.LANGCHAIN_TRACING_V2 === 'true',
+  langchainEndpoint: process.env.LANGCHAIN_ENDPOINT || 'https://api.smith.langchain.com',
+  langgraphApiPort: Number(process.env.LANGGRAPH_API_PORT) || 3001,
   
   // Database configuration
   databaseUrl: process.env.DATABASE_URL || 'sqlite:./data/app.db',

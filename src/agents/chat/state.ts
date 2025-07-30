@@ -16,6 +16,7 @@ export const ChatAgentConfigSchema = z.object({
   temperature: z.number().min(0).max(2).default(0.7),
   maxTokens: z.number().positive().optional(),
   systemPrompt: z.string().optional(),
+  thread_id: z.string().optional(), // For memory persistence
 });
 
 export type ChatAgentInput = z.infer<typeof ChatAgentInputSchema>;

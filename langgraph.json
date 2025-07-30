@@ -1,0 +1,15 @@
+{
+  "dependencies": [
+    "."
+  ],
+  "graphs": {
+    "chat_agent": "src/agents/chat/studio.ts:chatAgent",
+    "database_agent": "src/agents/database/studio.ts:databaseAgent"
+  },
+  "env": ".env",
+  "dockerfile_lines": [
+    "RUN apt-get update && apt-get install -y sqlite3"
+  ],
+  "pip_config_file": null,
+  "node_version": "20"
+}

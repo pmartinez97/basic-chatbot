@@ -1,15 +1,22 @@
 import { END, StateGraph, START } from "@langchain/langgraph";
 import { ToolNode, toolsCondition } from "@langchain/langgraph/prebuilt";
+import { MemorySaver } from "@langchain/langgraph-checkpoint";
 import { ChatAgentStateAnnotation, ChatAgentConfig } from "./state";
 import { inputNode, callModelNode } from "./nodes";
 import { webSearchTool } from "../../tools/search.tool";
 import { databaseTools } from "../../tools/database.tool";
+import { humanAssistanceTool } from "../../tools/human-assistance.tool";
 
-// Create the tool node with all available tools
-const toolNode = new ToolNode([webSearchTool, ...databaseTools]);
+// Create the tool node with all available tools (including human assistance)
+const toolNode = new ToolNode([webSearchTool, ...databaseTools, humanAssistanceTool]);
 
-// Create the proper LangGraph StateGraph
-export function createChatAgentGraph(_config?: ChatAgentConfig) {
+// Create a singleton memory saver for persistent checkpointing across all chat instances
+const globalMemory = new MemorySaver();
+
+// Create and compile the graph as a singleton to maintain memory state
+let compiledChatGraph: ReturnType<typeof StateGraph.prototype.compile> | null = null;
+
+function buildChatGraph() {
   const builder = new StateGraph(ChatAgentStateAnnotation)
     .addNode("message", inputNode)
     .addNode("call_model", callModelNode)
@@ -22,10 +29,17 @@ export function createChatAgentGraph(_config?: ChatAgentConfig) {
     })
     .addEdge("tools", "call_model");
 
-  // Compile the graph
-  const compiledGraph = builder.compile();
+  // Compile the graph with the global checkpointer for memory
+  return builder.compile({ checkpointer: globalMemory });
+}
 
-  return compiledGraph;
+// Create the proper LangGraph StateGraph
+export function createChatAgentGraph(_config?: ChatAgentConfig) {
+  // Return the singleton graph instance to maintain memory across calls
+  if (!compiledChatGraph) {
+    compiledChatGraph = buildChatGraph();
+  }
+  return compiledChatGraph;
 }
 
 // Export graph metadata for visualization

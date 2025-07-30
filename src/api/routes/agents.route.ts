@@ -18,6 +18,7 @@ const ChatRequestSchema = z.object({
   input_text: z.string().min(1, 'Input text is required'),
   extra_context: z.string().optional(),
   config: z.record(z.string(), z.any()).optional(),
+  thread_id: z.string().optional(),
 });
 
 // GET /api/agents - List all available agents
@@ -132,7 +133,7 @@ router.post('/:id/chat',
   async (req: Request, res: Response<ApiResponse<ChatResponse>>) => {
     try {
       const { id } = req.params;
-      const { input_text, extra_context, config } = req.body as ChatRequest;
+      const { input_text, extra_context, config, thread_id } = req.body as ChatRequest;
 
       if (!agentRegistry.hasAgent(id)) {
         return res.status(404).json({
@@ -143,11 +144,18 @@ router.post('/:id/chat',
       }
 
       const input = { input_text, extra_context };
-      const result = await agentRegistry.executeAgent(id, input, config);
+      // Generate thread_id if not provided for memory persistence
+      const actualThreadId = thread_id || `thread_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const configWithThreadId = { ...config, thread_id: actualThreadId };
+      
+      const result = await agentRegistry.executeAgent(id, input, configWithThreadId);
 
       res.json({
         success: true,
-        data: result,
+        data: {
+          ...result,
+          thread_id: actualThreadId // Include thread_id for client to use in subsequent calls
+        },
         timestamp: new Date().toISOString(),
       });
     } catch (error) {

@@ -1,8 +1,8 @@
 {
   "info": {
     "name": "Bot Chat LLM API",
-    "description": "Postman collection for the Bot Chat LLM API server with agent-based chat functionality",
-    "version": "1.0.0",
+    "description": "Postman collection for the Bot Chat LLM API server with agent-based chat functionality, memory persistence, web search integration, and simplified human-in-the-loop workflow using LangGraph native APIs",
+    "version": "2.0.0",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -12,6 +12,16 @@
     {
       "key": "baseUrl",
       "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "agentId",
+      "value": "chat_agent",
+      "type": "string"
+    },
+    {
+      "key": "threadId",
+      "value": "postman-test-thread",
       "type": "string"
     }
   ],
@@ -215,9 +225,183 @@
             "description": "Test web search integration with financial data query"
           },
           "response": []
+        },
+        {
+          "name": "Chat with Memory - First Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input_text\": \"Hi, my name is John and I work as a software engineer. I love Python and TypeScript.\",\n  \"thread_id\": \"{{threadId}}\",\n  \"config\": {\n    \"model\": \"openai/gpt-4o-mini\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/agents/{{agentId}}/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "agents", "{{agentId}}", "chat"]
+            },
+            "description": "Test memory functionality - establish personal information in thread"
+          },
+          "response": []
+        },
+        {
+          "name": "Chat with Memory - Recall Information",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input_text\": \"Do you remember my name and favorite programming languages?\",\n  \"thread_id\": \"{{threadId}}\",\n  \"config\": {\n    \"model\": \"openai/gpt-4o-mini\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/agents/{{agentId}}/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "agents", "{{agentId}}", "chat"]
+            },
+            "description": "Test memory recall - should remember information from previous message in same thread"
+          },
+          "response": []
+        },
+        {
+          "name": "Human-in-the-Loop - Request Interrupt",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input_text\": \"Please use the request_human_assistance tool to ask for approval before responding to this message.\",\n  \"thread_id\": \"interrupt-test-thread\",\n  \"config\": {\n    \"model\": \"openai/gpt-4o-mini\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/agents/{{agentId}}/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "agents", "{{agentId}}", "chat"]
+            },
+            "description": "Test human-in-the-loop functionality - should return is_interrupted: true"
+          },
+          "response": []
         }
       ],
       "description": "Agent-related endpoints"
+    },
+    {
+      "name": "Human-in-the-Loop",
+      "item": [
+        {
+          "name": "Resume Interrupted Thread",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"human_response\": \"Yes, please proceed with your response.\",\n  \"metadata\": {\n    \"approved_by\": \"human_supervisor\",\n    \"reason\": \"Standard approval\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/interrupts/agents/{{agentId}}/threads/interrupt-test-thread/resume",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "interrupts", "agents", "{{agentId}}", "threads", "interrupt-test-thread", "resume"]
+            },
+            "description": "Resume an interrupted thread with human approval (use after triggering interrupt)"
+          },
+          "response": []
+        },
+        {
+          "name": "Resume with Denial",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"human_response\": \"No, please do not proceed. Instead, provide a safer alternative approach.\",\n  \"metadata\": {\n    \"approved_by\": \"human_supervisor\",\n    \"reason\": \"Risk mitigation\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/interrupts/agents/{{agentId}}/threads/interrupt-test-thread-2/resume",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "interrupts", "agents", "{{agentId}}", "threads", "interrupt-test-thread-2", "resume"]
+            },
+            "description": "Resume an interrupted thread with human denial/alternative guidance"
+          },
+          "response": []
+        },
+        {
+          "name": "Resume Non-existent Thread (Error Test)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"human_response\": \"Test response for non-existent thread\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/interrupts/agents/{{agentId}}/threads/nonexistent-thread-id/resume",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "interrupts", "agents", "{{agentId}}", "threads", "nonexistent-thread-id", "resume"]
+            },
+            "description": "Test error handling when trying to resume a non-existent thread (should return error)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Human-in-the-loop interrupt and resume functionality using LangGraph native APIs"
     },
     {
       "name": "Database API",
@@ -395,7 +579,41 @@
       "script": {
         "type": "text/javascript",
         "exec": [
-          ""
+          "// Global tests for all endpoints",
+          "pm.test('Response time is less than 30 seconds', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(30000);",
+          "});",
+          "",
+          "pm.test('Content-Type is application/json', function () {",
+          "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+          "});",
+          "",
+          "// Test for successful API responses",
+          "if (pm.response.code === 200) {",
+          "    pm.test('Successful response has required structure', function () {",
+          "        const jsonData = pm.response.json();",
+          "        pm.expect(jsonData).to.have.property('success');",
+          "        pm.expect(jsonData).to.have.property('timestamp');",
+          "        ",
+          "        if (jsonData.success) {",
+          "            pm.expect(jsonData).to.have.property('data');",
+          "        }",
+          "    });",
+          "}",
+          "",
+          "// Test for interrupted responses",
+          "if (pm.response.code === 200) {",
+          "    const jsonData = pm.response.json();",
+          "    if (jsonData.data && jsonData.data.is_interrupted) {",
+          "        pm.test('Interrupted response has correct structure', function () {",
+          "            pm.expect(jsonData.data).to.have.property('interrupt_request');",
+          "            pm.expect(jsonData.data).to.have.property('next_steps');",
+          "            pm.expect(jsonData.data.interrupt_request).to.have.property('type');",
+          "            pm.expect(jsonData.data.interrupt_request).to.have.property('request_type');",
+          "            pm.expect(jsonData.data.interrupt_request).to.have.property('interrupt_id');",
+          "        });",
+          "    }",
+          "}"
         ]
       }
     }

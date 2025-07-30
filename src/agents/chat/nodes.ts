@@ -6,16 +6,20 @@ import { getLLMConfig } from "../../utils/config.util";
 import { logger } from "../../utils/logger.util";
 import { webSearchTool } from "../../tools/search.tool";
 import { databaseTools } from "../../tools/database.tool";
+import { humanAssistanceTool } from "../../tools/human-assistance.tool";
 
 export async function inputNode(state: ChatAgentState): Promise<Partial<ChatAgentState>> {
   try {
     logger.info('Input node: Processing user input');
     
-    // Create initial human message from input
+    // Create new human message from input
     const humanMessage = new HumanMessage(state.input.input_text);
     
+    // Append to existing messages for conversation continuity
+    const updatedMessages = [...state.messages, humanMessage];
+    
     return {
-      messages: [humanMessage],
+      messages: updatedMessages,
       iterationCount: 0,
       extra_context: state.input.extra_context,
     };
@@ -33,13 +37,15 @@ export async function callModelNode(
     const modelString = config.configurable?.model || 'openai/gpt-4o-mini';
     const llmConfig = getLLMConfig(modelString);
     
-    // Create LLM with tools bound
-    const allTools = [webSearchTool, ...databaseTools];
+    // Create LLM with tools bound (including human assistance)
+    const allTools = [webSearchTool, ...databaseTools, humanAssistanceTool];
     const llmWithTools = createLLM(llmConfig, allTools);
     
-    // Add system message with context if we don't have messages yet
+    // Add system message with context if this is the first interaction
     let messages = [...state.messages];
-    if (messages.length === 1) { // Only the initial human message
+    const hasSystemMessage = messages.some(msg => msg._getType() === 'system');
+    
+    if (!hasSystemMessage) {
       const systemPrompt = await ChatAgentPrompts.createChatPrompt(
         state.extra_context || '', 
         []
@@ -51,8 +57,11 @@ export async function callModelNode(
     logger.info('Call model node: Invoking LLM');
     const response = await llmWithTools.invoke(messages);
     
+    // Append the response to existing messages for conversation continuity
+    const updatedMessages = [...messages, response];
+    
     return {
-      messages: [response],
+      messages: updatedMessages,
       iterationCount: state.iterationCount + 1,
     };
   } catch (error) {
